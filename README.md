@@ -7,8 +7,8 @@
 Project Delta addresses the **NASA Space Apps Challenge 2025: Sharks from Space**. 
 
 Apex marine predators like sharks are critical to maintaining ocean ecosystems, yet gathering real-time data on their exact foraging habits and pathways remains extremely difficult. Our project solves this by introducing a dual-system framework:
-1. **A Predictive Mathematical Model** built using real NASA satellite data (**SWAT** and **PACE OCI** missions) to locate warm ocean eddies and chlorophyll/phytoplankton hotspots, calculating exactly where a shark will travel to forage using Haversine formulas.
-2. **A Hardware Tracking Tag Embedded with Edge AI** designed entirely from scratch using a Raspberry Pi, an accelerometer, and a camera to physically capture when and what a shark is eating, then streaming that data back to simulated ocean buoys.
+1. **A Predictive Mathematical Model** built using real NASA satellite data (**SWOT** and **PACE OCI** missions) to locate warm ocean eddies and chlorophyll/phytoplankton hotspots, calculating exactly where a shark will travel to forage using Haversine formulas.
+2. **A Hardware Tracking Tag with On-Device Feeding Detection** designed entirely from scratch using a Raspberry Pi, an accelerometer, and a camera to physically capture when a shark is eating, then relaying the images to a simulated ocean buoy where an AI object-detection model identifies what it ate.
 
 ---
 
@@ -17,22 +17,22 @@ Apex marine predators like sharks are critical to maintaining ocean ecosystems, 
 ### 1. Mathematical Framework & Hotspot Prediction
 Sharks utilize warm ocean eddies as navigation conduits because these eddies experience large phytoplankton blooms, attracting smaller prey (fish). 
 * **Data Ingestion**: The system processes NetCDF files directly from two active NASA Earth observation missions:
-  * **SWAT (Surface Water and Ocean Topography)**: Maps ocean surface height anomalies to identify warm ocean eddies.
+  * **SWOT (Surface Water and Ocean Topography)**: Maps ocean surface height anomalies to identify warm ocean eddies.
   * **PACE OCI (Ocean Color Instrument)**: Tracks chlorophyll-a and phytoplankton concentration levels globally.
 * **Haversine Distance Mapping**: Given an incoming GPS coordinate of a shark, the backend executes multiple Haversine distance calculations across every extracted eddy coordinate to find the closest active marine system:
   $$\text{d} = 2R \arcsin\left(\sqrt{\sin^2\left(\frac{\Delta \phi}{2}\right) + \cos(\phi_1)\cos(\phi_2)\sin^2\left(\frac{\Delta \lambda}{2}\right)}\right)$$
 * **Visualization Pipeline**: Built using `matplotlib` and `cartopy` in Python, the pipeline generates high-fidelity spatial plots showing the shark's current location (represented by a black star), the predicted foraging eddy destination (red dot), and scalar fields representing chlorophyll density.
 
 ### 2. Custom Edge Hardware Tag
-A fully functional hardware prototype built to detect and record feeding events on the edge.
+A fully functional hardware prototype built to detect and record feeding events on-device.
 * **The Compute Engine**: A **Raspberry Pi 4** acts as the central processor executing local scripts.
-* **Foraging Detection**: An **accelerometer** is mapped to track rapid mechanical movements of the shark's jaw. When the jaw opens to feed, a threshold trigger initializes data capture.
-* **Visual Capture**: A **hardware camera module** triggers at the precise moment of jaw acceleration, taking snapshots of the prey in real time.
-* **Data Logging**: Every captured event creates a timestamped record saved directly to a `photo_locations.csv` file mapping the file name, precise time, and current coordinate telemetry.
+* **Foraging Detection**: An **ADXL345 accelerometer** is mapped to track rapid mechanical movements of the shark's jaw. When the jaw opens to feed, an on-device threshold trigger initializes data capture.
+* **Visual Capture**: A **camera** triggers at the moment of jaw acceleration, taking snapshots of the prey in real time.
+* **Data Logging**: Every captured event creates a timestamped record saved directly to a `photo_locations.csv` file mapping the file name, time, and current (IP-based, simulated) coordinates.
 
-### 3. Edge AI & Data Relay
+### 3. Data Relay & Buoy-Side AI Detection
 * **The Relay Mechanism**: In our conceptual model, the Raspberry Pi tag uses **SCP (Secure Copy Protocol)** to securely transmit images and CSV data logs over an IP network to a local Linux PC simulating an ocean data-relay buoy. 
-* **Edge Image Classification**: Once received by the buoy interface, an image detection model evaluates the snapshots to classify what the shark consumed (e.g., identifying fish), sorting and saving the data cleanly for marine biologists.
+* **Buoy-Side Object Detection**: Once received by the buoy PC, YOLO object-detection models (Ultralytics, built on the open-source marine-detect project) evaluate the snapshots to identify what the shark consumed (e.g., fish), saving annotated images and a prey log for marine biologists and discarding images with no detections.
 
 ---
 
@@ -47,9 +47,9 @@ A fully functional hardware prototype built to detect and record feeding events 
 * **Frontend/Interface**: Flask, HTML5, Custom CSS, JavaScript
 * **Data Processing & Analytics**: Python, NumPy, Pandas, NetCDF4
 * **Mapping & Graphics**: Matplotlib, Cartopy
-* **Edge AI & Computer Vision**: OpenCV, Image Classification Frameworks
-* **Hardware Layer**: Raspberry Pi 4, Digital Accelerometers, Pi Camera Module
-* **Data Sources**: NASA Earth Observations (SWAT Surface Height & PACE OCI Aquamotus Chlorophyll data)
+* **AI & Computer Vision**: OpenCV, Ultralytics YOLO (object detection, run at the buoy)
+* **Hardware Layer**: Raspberry Pi 4, ADXL345 Accelerometer, Camera
+* **Data Sources**: NASA Earth Observations (SWOT Surface Height & PACE OCI Chlorophyll-a data)
 
 ---
 
